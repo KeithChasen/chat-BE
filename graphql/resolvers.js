@@ -15,8 +15,8 @@ const generateToken = user => jwt.sign({
 module.exports = {
   Query: {
     getUsers: async (_, __, context) => {
+      let user = '';
       try {
-        let user;
         if(context.req && context.req.headers.authorization) {
           const token = context.req.headers.authorization.split('Bearer ')[1];
           jwt.verify(token, jwtSecret, (err, decodedToken) => {
@@ -28,8 +28,8 @@ module.exports = {
 
             console.log(user, 'decoded user')
           });
+          return await User.find({ email: { $ne: user }});
         }
-        return await User.find();
       } catch (err) {
         console.log(err);
         throw err;
