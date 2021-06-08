@@ -1,3 +1,4 @@
 const MONGO = '';
+const JWT = '';
 
-module.exports = { MONGO };
+module.exports = { MONGO, JWT };
