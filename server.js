@@ -11,7 +11,8 @@ const MONGO = process.env.MONGO || config.MONGO;
 
 const server = new ApolloServer({
   typeDefs,
-  resolvers
+  resolvers,
+  context: ctx => ctx
 });
 
 mongoose

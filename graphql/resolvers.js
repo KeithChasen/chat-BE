@@ -1,4 +1,4 @@
-const {UserInputError} = require('apollo-server');
+const {UserInputError, AuthenticationError } = require('apollo-server');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
@@ -14,11 +14,25 @@ const generateToken = user => jwt.sign({
 
 module.exports = {
   Query: {
-    getUsers: async () => {
+    getUsers: async (_, __, context) => {
       try {
+        let user;
+        if(context.req && context.req.headers.authorization) {
+          const token = context.req.headers.authorization.split('Bearer ')[1];
+          jwt.verify(token, jwtSecret, (err, decodedToken) => {
+            if (err) {
+              throw new AuthenticationError('Unauthenticated')
+            }
+
+            user = decodedToken.email;
+
+            console.log(user, 'decoded user')
+          });
+        }
         return await User.find();
       } catch (err) {
-        console.log(err)
+        console.log(err);
+        throw err;
       }
     },
   },
