@@ -4,6 +4,27 @@ const Message = require('../../mongo/Message');
 
 module.exports = {
   Query: {
+    getMessages: async (parent, { from }, { user }) => {
+      try {
+        if (!user)
+          throw new AuthenticationError('Unauthenticated');
+
+        const companion = await User.findOne({ email: from });
+
+        if (!companion)
+          throw new UserInputError('User not found');
+
+        return await Message.find({
+          $or: [
+            { $and: [{ from: user.email, to: companion.email }] },
+            { $and: [{ from: companion.email, to: user.email }] }
+          ]
+        }).sort({ createdAt: -1});
+      } catch (e) {
+        console.log(e);
+        throw e;
+      }
+    }
   },
   Mutation: {
     sendMessage: async (parent, { to, content }, context) => {
