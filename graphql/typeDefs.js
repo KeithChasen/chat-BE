@@ -7,9 +7,11 @@ module.exports = gql`
     }
 
     type Message {
+        id: String!
         content: String!
         from: String!
         to: String!
+        createdAt: String!
     }
 
     type Query {

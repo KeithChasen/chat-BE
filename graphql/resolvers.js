@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const fs = require('fs');
 
 const User = require('../mongo/User');
+const Message = require('../mongo/Message');
 const config = fs.existsSync(`${__dirname}/../config.js`)? require(`${__dirname}/../config.js`) : null;
 const jwtSecret = process.env.JWT || config.JWT;
 
@@ -105,11 +106,35 @@ module.exports = {
         });
       }
     },
-    sendMessage: async (parent, args, context) => {
+    sendMessage: async (parent, { to, content }, context) => {
       try {
-        
-      } catch (err) {
+        if (!context.user)
+          throw new AuthenticationError('Unauthenticated');
 
+        const recipient = await User.findOne({ email: to });
+
+        if (!recipient) {
+          throw new UserInputError('User not found');
+        } else if (recipient === content.user.email) {
+          throw new UserInputError('You can not message yourself');
+        }
+
+        if (content.trim() === '') {
+          throw new UserInputError('content is empty');
+        }
+
+        const message = new Message({
+          from: context.user.email,
+          to,
+          content,
+          createdAt: Date.now()
+        });
+
+        return await message.save();
+
+      } catch (err) {
+        console.log(err);
+        throw err;
       }
     }
   }
