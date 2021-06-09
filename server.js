@@ -5,6 +5,8 @@ const fs = require('fs');
 const typeDefs = require('./graphql/typeDefs');
 const resolvers = require('./graphql/resolvers');
 
+const contextMiddleware = require('./util/contextMiddleware');
+
 const config = fs.existsSync('./config.js') ? require('./config.js') : null;
 
 const MONGO = process.env.MONGO || config.MONGO;
@@ -12,7 +14,7 @@ const MONGO = process.env.MONGO || config.MONGO;
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  context: ctx => ctx
+  context: contextMiddleware
 });
 
 mongoose

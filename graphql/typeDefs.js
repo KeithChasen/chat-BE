@@ -6,6 +6,12 @@ module.exports = gql`
         token: String
     }
 
+    type Message {
+        content: String!
+        from: String!
+        to: String!
+    }
+
     type Query {
         getUsers: [User]!
     }
@@ -21,5 +27,7 @@ module.exports = gql`
             email: String!
             password: String!
         ): User!
+        
+        sendMessage(to: String! content: String!): Message! 
     }
 `;

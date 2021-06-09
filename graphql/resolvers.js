@@ -15,21 +15,11 @@ const generateToken = user => jwt.sign({
 module.exports = {
   Query: {
     getUsers: async (_, __, context) => {
-      let user = '';
       try {
-        if(context.req && context.req.headers.authorization) {
-          const token = context.req.headers.authorization.split('Bearer ')[1];
-          jwt.verify(token, jwtSecret, (err, decodedToken) => {
-            if (err) {
-              throw new AuthenticationError('Unauthenticated')
-            }
+        if (!context.user)
+          throw new AuthenticationError('Unauthenticated');
 
-            user = decodedToken.email;
-
-            console.log(user, 'decoded user')
-          });
-          return await User.find({ email: { $ne: user }});
-        }
+        return await User.find({ email: { $ne: context.user.email }});
       } catch (err) {
         console.log(err);
         throw err;
@@ -113,6 +103,13 @@ module.exports = {
         throw new UserInputError('Validation errors', {
           errors: err
         });
+      }
+    },
+    sendMessage: async (parent, args, context) => {
+      try {
+        
+      } catch (err) {
+
       }
     }
   }
