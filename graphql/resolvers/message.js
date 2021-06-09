@@ -1,6 +1,6 @@
 const {UserInputError, AuthenticationError } = require('apollo-server');
-const User = require('../mongo/User');
-const Message = require('../mongo/Message');
+const User = require('../../mongo/User');
+const Message = require('../../mongo/Message');
 
 module.exports = {
   Query: {
@@ -15,7 +15,7 @@ module.exports = {
 
         if (!recipient) {
           throw new UserInputError('User not found');
-        } else if (recipient === content.user.email) {
+        } else if (recipient === context.user.email) {
           throw new UserInputError('You can not message yourself');
         }
 

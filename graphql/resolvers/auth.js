@@ -3,8 +3,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
 
-const User = require('../mongo/User');
-const config = fs.existsSync(`${__dirname}/../config.js`)? require(`${__dirname}/../config.js`) : null;
+const User = require('../../mongo/User');
+const config = fs.existsSync(`${__dirname}/../../config.js`)? require(`${__dirname}/../../config.js`) : null;
 const jwtSecret = process.env.JWT || config.JWT;
 
 const generateToken = user => jwt.sign({
