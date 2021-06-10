@@ -4,6 +4,7 @@ module.exports = gql`
     type User {
         email: String!
         token: String
+        latestMessage: Message
     }
 
     type Message {

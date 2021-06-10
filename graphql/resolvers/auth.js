@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const fs = require('fs');
 
 const User = require('../../mongo/User');
+const Message = require('../../mongo/Message');
 const config = fs.existsSync(`${__dirname}/../../config.js`)? require(`${__dirname}/../../config.js`) : null;
 const jwtSecret = process.env.JWT || config.JWT;
 
@@ -12,6 +13,11 @@ const generateToken = user => jwt.sign({
   email: user.email
 }, jwtSecret, { expiresIn: '1h' });
 
+const getLatestMessages = (user) => Message.find({
+  $or: [{ from: user.email }, { to: user.email }]
+}).sort({ createdAt: -1});
+
+
 module.exports = {
   Query: {
     getUsers: async (_, __, context) => {
@@ -19,7 +25,13 @@ module.exports = {
         if (!context.user)
           throw new AuthenticationError('Unauthenticated');
 
-        return await User.find({ email: { $ne: context.user.email }});
+        const users = await User.find({ email: { $ne: context.user.email }});
+        const latestMessages = await getLatestMessages(context.user);
+
+        return users.map(user => {
+          user.latestMessage = latestMessages.find(message => message.from === user.email || message.to === user.email);
+          return user;
+        });
       } catch (err) {
         console.log(err);
         throw err;
