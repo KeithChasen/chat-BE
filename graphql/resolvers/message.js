@@ -1,6 +1,9 @@
 const {UserInputError, AuthenticationError } = require('apollo-server');
 const User = require('../../mongo/User');
 const Message = require('../../mongo/Message');
+const { PubSub } = require('apollo-server');
+
+const pubsub = new PubSub();
 
 module.exports = {
   Query: {
@@ -51,12 +54,21 @@ module.exports = {
           createdAt: Date.now()
         });
 
-        return await message.save();
+        const messageCreated = await message.save();
+
+        pubsub.publish('NEW_MESSAGE', { newMessage: message });
+
+        return messageCreated;
 
       } catch (err) {
         console.log(err);
         throw err;
       }
+    }
+  },
+  Subscription: {
+    newMessage: {
+      subscribe: () => pubsub.asyncIterator(['NEW_MESSAGE'])
     }
   }
 };
