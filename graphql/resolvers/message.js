@@ -1,9 +1,6 @@
-const {UserInputError, AuthenticationError } = require('apollo-server');
+const {UserInputError, AuthenticationError, withFilter } = require('apollo-server');
 const User = require('../../mongo/User');
 const Message = require('../../mongo/Message');
-const { PubSub } = require('apollo-server');
-
-const pubsub = new PubSub();
 
 module.exports = {
   Query: {
@@ -30,16 +27,16 @@ module.exports = {
     }
   },
   Mutation: {
-    sendMessage: async (parent, { to, content }, context) => {
+    sendMessage: async (parent, { to, content }, { user, pubsub }) => {
       try {
-        if (!context.user)
+        if (!user)
           throw new AuthenticationError('Unauthenticated');
 
         const recipient = await User.findOne({ email: to });
 
         if (!recipient) {
           throw new UserInputError('User not found');
-        } else if (recipient === context.user.email) {
+        } else if (recipient === user.email) {
           throw new UserInputError('You can not message yourself');
         }
 
@@ -48,7 +45,7 @@ module.exports = {
         }
 
         const message = new Message({
-          from: context.user.email,
+          from: user.email,
           to,
           content,
           createdAt: Date.now()
@@ -68,7 +65,12 @@ module.exports = {
   },
   Subscription: {
     newMessage: {
-      subscribe: () => pubsub.asyncIterator(['NEW_MESSAGE'])
+      subscribe: withFilter((_, __, { pubsub, user }) => {
+        if (!user) throw new AuthenticationError('Unauthenticated');
+        return pubsub.asyncIterator(['NEW_MESSAGE']);
+      }, (parent, _, { user }) => {
+        return parent.newMessage.from === user.email || parent.newMessage.to === user.email;
+      }),
     }
   }
 };
